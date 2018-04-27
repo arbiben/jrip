@@ -11,7 +11,7 @@ sock = socket.socket(socket.AF_INET, # Internet
 sock.bind(('', UDP_PORT))
 
 def on_new_connection(data, addr):
-    jrip_file = json.loads(data)
+    '''jrip_file = json.loads(data)
     jrip_type = jrip_file["Data"]["Type"]
     ack_num = jrip_file["ACK"]
     
@@ -20,12 +20,13 @@ def on_new_connection(data, addr):
         print(jrip_file["SEQ"])
     else:
         print("trace aruluuuu")
-
+    '''
+    print("got it!")
     sock.sendto(bytes("got it",'utf-8'), (addr[0], addr[1]))
-    
+    '''
     if int(ack_num) == 0:
         return
-
+    '''
 
 while True:
     data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
