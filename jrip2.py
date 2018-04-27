@@ -9,14 +9,15 @@
 #################################
 
 
-import socket, time, json
+import socket, time, json, random
 import threading, sys, re
 import argparse, json, copy
 
-ack_window = {}     # holds ack records for eack host 
-ip_ack = {}         # every host is assigned an id
+lock = threading.Lock # lock variables from being accessed by more than one thread
+ack_window = {}       # holds ack records for eack host 
+ip_ack = {}           # every host is assigned an id
 max_packet_seq = 100  # amount of pings we send to other servers
-window = 5          # window size
+window = 6            # window size
 
 sock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
@@ -67,34 +68,45 @@ sock.bind(('', args.port))
 
 # change the window based on ACK received and resend new packets
 # TODO ADJUST WINDOW SIZE AFTER PASSING 95 PACKETS ACK
-
-def slide_window(hid, ct, index):
-    win = ack_window[hid]
-    ip, port = hid.split(":")
-    temp_window = []
-    last = win[window-1][0] if index == window -1 else win[index+1][0]
-
-    new_packets = index + 1
-    
-    for i in range (window):
-        temp_window.append((last,False))
-        last = last+1
-    
-    # update the receive window
-    ack_window[hid] = copy.deepcopy(temp_window)
-    index = window - new_packets
-
-    # send packets based on new window
-    send_packets(hid, ct, index)
-
-
+def slide_window(hid):
+    with lock:    
+        win = ack_window[hid]
+        temp_window = []
+        last = 4
+        while last > -1 and win[last] is False:
+            last = last - 1
+        
+        if last == -1:
+            return
+        
+        if last = 4:
+            last = win[last][0] + 1
+            for i in range (window-1):
+                temp_window.append((last,False))
+                last = last+1
+        else:
+            last = win[last+1][0]
+            for i in range(window-1):
+                temp_window.append((last, False))
+                last = last+1
+        
+        # update the receive window
+        ack_window[hid] = copy.deepcopy(temp_window)
+        ack_window[hid][5] = -1
 
 # send packets from index to end of window
 # ct - copy of the jrip table
-def send_packets(hid, ct, index):
+def send_packets(hid, ct):
     win = ack_window[hid]
     ip, port = hid.split(":")
-    for i in range(index, window):
+    index = 4
+
+    while index > 0 and win[index][1] is False:
+        if win[index-1][1] is True:
+            break
+        index = index - 1
+
+    for i in range(index, window-1):
         rand = random.randint(0, 100)
         
         if rand >= loss_rate:
@@ -102,19 +114,25 @@ def send_packets(hid, ct, index):
             ct["SEQ"] = seq
             temp_json = json.dumps(ct)
             sock.sendto("{}".format(temp_json).encode(), (ip, int(port)))
-        
+            print("packet {} sent".format(seq))
         else:
             print("packet lost")
 
-
-
 # thread that manages a specific connection
+# TODO manage time outs
 def neighbor_thread(h, host_id):
-    window_size = 5
-    last_packet_sent = -1
-    #print(ip_ack[host_id])
-    send_packets(host_id, copy.deepcopy(cost_table), 0) 
-    
+    while True:
+        send_packets(host_id, copy.deepcopy(cost_table)) 
+
+        t = threading.Timer(3.0, send_packets(host_id, copy.deepcopy(cost_table)))
+        t.start()
+        while ack_window[host_id][5] == -1:
+            print("checking if packets were change...")
+            # do nothing
+        t.cancel()
+        slide_window(host_id)
+
+
 
 # binary search for index of packet in window
 def get_index_of_ack_num(target, arr, l, r):
@@ -122,15 +140,14 @@ def get_index_of_ack_num(target, arr, l, r):
         return -1
 
     mid = int((l+r)/2)
-    if arr[mid][0] == target:
-        return mid
-    if arr[mid][0] > target:
-        return get_index_of_ack_num(target, arr, l, mid-1)
+    with lock:
+        if arr[mid][0] == target:
+            return mid
+        if arr[mid][0] > target:
+            return get_index_of_ack_num(target, arr, l, mid-1)
 
     return get_index_of_ack_num(target, arr, mid+1, r)
     
-
-
 
 # gets an ACK packege and updates window associated with it
 def handle_ack(addr, jrip_file):
@@ -139,7 +156,9 @@ def handle_ack(addr, jrip_file):
     i = get_index_of_ack_num(ack_num, ack_window[ip], 0, len(ack_window[ip])-1)
     
     if i != -1 and ack_window[ip][i][1] is False:
-        slide_window(ip, copy.deepcopy(cost_table), i)
+        with lock:
+            ack_window[ip][i][1] = True
+            ack_window[ip][5] = i
         
 
 # gets data (ping) and responses with ACK
@@ -157,10 +176,16 @@ def listener_thread(d1,d2):
     while True:
         data, addr = sock.recvfrom(4096)
         jrip_file = json.loads(data)
+        args = (addr, jrip_file)
         if jrip_file["SEQ"] == -1:
-            handle_ack(addr, jrip_file)
+            t = threading.Thread(target=handle_ack, args=args)
+            t.start()
+            t.join()
         else:
-            handle_data(addr, jrip_file)
+            t = threading.Thread(target=handle_data, args=args)
+            t.start()
+            t.join()
+
 
         print(data)
 
@@ -168,7 +193,7 @@ def listener_thread(d1,d2):
 # create a thread for every host given in command line
 for k in cost_table["Data"]["RIPTable"]:
 #    print(cost_table["Data"])
-    ack_window[k["neighbor"]] = [(0,False),(1,False),(2,False),(3,False),(4,False)]
+    ack_window[k["neighbor"]] = [(0,False),(1,False),(2,False),(3,False),(4,False), -1]
     args = (0, k["neighbor"])
     t = threading.Thread(target=neighbor_thread, args=args)
     t.start()
