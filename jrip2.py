@@ -33,8 +33,13 @@ if args.loss_rate is None or args.port is None:
     print("enter loss rate and port info")
     sys.exit()
 
+if args.loss_rate > .99 or args.loss_rate < 0.0:
+    print("loss rate should be between 0.0 - 0.99")
+    sys.exit()
+
+
 hosts = args.hosts
-loss_rate = args.loss_rate
+loss_rate = args.loss_rate * 100
 
 # create a dict object containing cost to neighbors
 cost_table = {}
@@ -80,7 +85,7 @@ def slide_window(hid, ct, index):
     index = window - new_packets
 
     # send packets based on new window
-    send_packets(hid, ip, port, ct, index)
+    send_packets(hid, ct, index)
 
 
 
@@ -90,10 +95,17 @@ def send_packets(hid, ct, index):
     win = ack_window[hid]
     ip, port = hid.split(":")
     for i in range(index, window):
-        seq = win[i][0]
-        ct["SEQ"] = seq
-        sock.sendto("{}".format(ct).encode(), (ip, int(port)))
-    
+        rand = random.randint(0, 100)
+        
+        if rand >= loss_rate:
+            seq = win[i][0]
+            ct["SEQ"] = seq
+            temp_json = json.dumps(ct)
+            sock.sendto("{}".format(temp_json).encode(), (ip, int(port)))
+        
+        else:
+            print("packet lost")
+
 
 
 # thread that manages a specific connection
@@ -110,24 +122,23 @@ def get_index_of_ack_num(target, arr, l, r):
         return -1
 
     mid = int((l+r)/2)
-    if arr[mid] == target:
+    if arr[mid][0] == target:
         return mid
-
-    if arr[mid] > target:
+    if arr[mid][0] > target:
         return get_index_of_ack_num(target, arr, l, mid-1)
 
-    return get_index_of_ack_num(target, arr, mid+1, r):
+    return get_index_of_ack_num(target, arr, mid+1, r)
     
 
 
 
 # gets an ACK packege and updates window associated with it
 def handle_ack(addr, jrip_file):
-    ip = addr[0]+":"+addr[1]
+    ip = addr[0]+":"+str(addr[1])
     ack_num = jrip_file["ACK"]-1
     i = get_index_of_ack_num(ack_num, ack_window[ip], 0, len(ack_window[ip])-1)
-    if i != -1 and ack[ip][1] is False:
-        ack_window[ip][i] = (ack_window[ip][i][0], True)
+    
+    if i != -1 and ack_window[ip][i][1] is False:
         slide_window(ip, copy.deepcopy(cost_table), i)
         
 
@@ -138,8 +149,8 @@ def handle_data(addr, jrip_file):
     ack_pack["SEQ"] = -1
     ack_pack["ACK"] = ack_num
     ip, port = addr
-    sock.sendto("{}".format(ack_sock).encode(), (ip, int(port)))
-
+    #sock.sendto(.encode(), (ip, int(port)))
+    print("got a data file - not ACK")
 
 # listens for all incoming packets and updates appropriate host handlers
 def listener_thread(d1,d2):
@@ -156,6 +167,7 @@ def listener_thread(d1,d2):
 
 # create a thread for every host given in command line
 for k in cost_table["Data"]["RIPTable"]:
+#    print(cost_table["Data"])
     ack_window[k["neighbor"]] = [(0,False),(1,False),(2,False),(3,False),(4,False)]
     args = (0, k["neighbor"])
     t = threading.Thread(target=neighbor_thread, args=args)
