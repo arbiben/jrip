@@ -79,7 +79,6 @@ def listener_thread():
 
 def handle_ping(addr, jrip_file):
     print("got a ping! from {}".format(addr))
-    print(jrip_file)
     hid = str(addr[0])+":"+str(addr[1])
     seq_num = jrip_file["SEQ"]
     
@@ -90,8 +89,9 @@ def handle_ping(addr, jrip_file):
         expecting = pinging_me[hid]
         if expecting <= seq_num:
             pinging_me[hid] = expecting + 1 if expecting==seq_num else expecting
-            cost_table["ACK"] = expecting+1
+            cost_table["ACK"] = expecting
             cost_table["SEQ"] = -1
+            print("pingign back {}".format(cost_table["ACK"]))
             sock.sendto(json.dumps(cost_table).encode(), (addr[0], int(addr[1])))
 
 
