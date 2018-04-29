@@ -37,7 +37,7 @@ event = threading.Event()
 lock = threading.Lock()
 
 def print_table():
-    with lock
+    with lock:
         rip = table.get_table()["Data"]["RIPTable"][:]
     
     print("\nDestination\t\tDistance\tNext_Hop")
