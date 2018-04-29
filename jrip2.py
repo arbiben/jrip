@@ -116,7 +116,7 @@ def handle_ack(addr, jrip_file):
             print("made changes")
             with lock:
                 ack_window[hid] = copy.deepcopy(win_copy)
-                print("original table is {}".format(ack_window[hid))
+                print("original table is {}".format(ack_window[hid]))
 
             events[hid].set()
 
