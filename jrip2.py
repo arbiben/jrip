@@ -67,15 +67,16 @@ cost_json = json.dumps(cost_table)
 
 def listener_thread():
     while True:
-        print("alive")
         data, addr = sock.recvfrom(4096)
         jrip_file = json.loads(data)
         args = (addr, jrip_file)
-        print("ack: {} from: {}".format(jrip_file["ACK"], addr))
+        print("ack:{} seq:{} from: {}".format(jrip_file["ACK"],jrip_file["SEQ"],  addr))
         if jrip_file["SEQ"] == -1:
+            print("going to handle the ack")
             t = threading.Thread(target=handle_ack, args=args)
             t.start()
         else:
+            print("going to handle the ping")
             t = threading.Thread(target=handle_ping, args=args)
             t.start()
 
