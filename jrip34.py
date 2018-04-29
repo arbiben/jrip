@@ -42,7 +42,7 @@ def print_table():
     with lock:
         rip = table.get_table()["Data"]["RIPTable"][:]
     
-    print("\nDestination\t\tDistance\t\tNext_Hop")
+    print("\nDestination\t\tDistance\tNext_Hop")
     for n in rip:
         print("{}\t{}\t\t{}".format(n["Dest"],n["Cost"], n["Next"]))
     
@@ -54,6 +54,7 @@ def broadcast_table():
             neighbors = table.get_all_neighbors()[:]
             t = copy.deepcopy(table.get_table())
         event.wait(10)
+        print("pinging everyone!")
         for n in neighbors:
             ip, port = n.split(":")
             sock.sendto(json.dumps(t).encode(), (ip, int(port)))
@@ -65,10 +66,10 @@ def handle_jrip(neighbor_table, addr):
     with lock:
         change = table.update_table(neighbor_table, addr[0]+":"+str(addr[1]))
     
+    # if changes were made - print the table and ping neighbors
     if change:
         print_table()
-
-    event.set()
+        event.set()
 
 # start an indipendent thread that broadcasts the table
 t = threading.Thread(target=broadcast_table)
