@@ -70,6 +70,7 @@ def listener_thread():
         data, addr = sock.recvfrom(4096)
         jrip_file = json.loads(data)
         args = (addr, jrip_file)
+        print(jrip_file)
         if jrip_file["SEQ"] == -1:
             t = threading.Thread(target=handle_ack, args=args)
             t.start()
@@ -78,7 +79,6 @@ def listener_thread():
             t.start()
 
 def handle_ping(addr, jrip_file):
-    #print("{}".format(jrip_file))
     hid = str(addr[0])+":"+str(addr[1])
     seq_num = jrip_file["SEQ"]
     
@@ -89,15 +89,14 @@ def handle_ping(addr, jrip_file):
         expecting = pinging_me[hid]
         if expecting <= seq_num:
             pinging_me[hid] = expecting + 1 if int(expecting) == int(seq_num) else expecting
-            print(pinging_me[hid])
+            print("to me: {} my answer: {}".format(jrip_file["SEQ"], pinging_me[hid]))
             cost_table["ACK"] = pinging_me[hid]
             cost_table["SEQ"] = -1
-            print("pingign back {}".format(cost_table["ACK"]))
             sock.sendto(json.dumps(cost_table).encode(), (addr[0], int(addr[1])))
 
 
 def handle_ack(addr, jrip_file):
-    print(jrip_file["ACK"])
+    print("received ACK: {}".format(jrip_file["ACK"]))
     hid = str(addr[0])+":"+str(addr[1])
     ack_num = jrip_file["ACK"] - 1
     if ack_num <= 100:
@@ -110,6 +109,7 @@ def handle_ack(addr, jrip_file):
         if i != -1 and win_copy[i][1] is False:
             win_copy[i] = [win_copy[i][0],True]
             win_copy.append(i)
+            print("made changes")
             with lock:
                 ack_window[hid] = copy.deepcopy(win_copy)
 
