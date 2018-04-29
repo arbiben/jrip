@@ -109,6 +109,7 @@ def handle_ack(addr, jrip_file):
         win_copy = win_copy[:-1]
 
         i = get_index_ack(ack_num, win_copy, 0, len(win_copy)-1)
+        print("i is {} and table is {}".format(i, win_copy))
         if i != -1 and win_copy[i][1] is False:
             print("i is {}".format(i))
             win_copy[i] = [win_copy[i][0],True]
