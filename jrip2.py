@@ -107,15 +107,16 @@ def handle_ack(addr, jrip_file):
             win_copy = copy.deepcopy(ack_window[hid])
         
         win_copy = win_copy[:-1]
-        print("copy of win is {}".format(win_copy))
 
         i = get_index_ack(ack_num, win_copy, 0, len(win_copy)-1)
         if i != -1 and win_copy[i][1] is False:
+            print("i is {}".format(i))
             win_copy[i] = [win_copy[i][0],True]
             win_copy.append(i)
             print("made changes")
             with lock:
                 ack_window[hid] = copy.deepcopy(win_copy)
+                print("original table is {}".format(ack_window[hid))
 
             events[hid].set()
 
