@@ -100,7 +100,7 @@ def handle_ack(addr, jrip_file):
     print(jrip_file)
     hid = str(addr[0])+":"+str(addr[1])
     ack_num = jrip_file["ACK"] - 1
-    if ack_num < 101:
+    if ack_num < 100:
         with lock:
             win_copy = copy.deepcopy(ack_window[hid])
         
@@ -172,7 +172,7 @@ def slide_window(hid):
 def neighbor_thread(a, hid):
     while True:
         with lock:
-            #print("length of {} window is {}".format(hid, ack_window[hid]))
+            print("length of {} window is {}".format(hid, ack_window[hid]))
             if len(ack_window[hid]) <= 1:
                 drop = ack_window[hid+"D"]
                 total = ack_window[hid+"T"]
