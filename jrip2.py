@@ -78,7 +78,7 @@ def listener_thread():
             t.start()
 
 def handle_ping(addr, jrip_file):
-    print("{}".format(jrip_file))
+    #print("{}".format(jrip_file))
     hid = str(addr[0])+":"+str(addr[1])
     seq_num = jrip_file["SEQ"]
     
@@ -89,6 +89,7 @@ def handle_ping(addr, jrip_file):
         expecting = pinging_me[hid]
         if expecting <= seq_num:
             pinging_me[hid] = expecting + 1 if int(expecting) == int(seq_num) else expecting
+            print(pinging_me[hid])
             cost_table["ACK"] = pinging_me[hid]
             cost_table["SEQ"] = -1
             print("pingign back {}".format(cost_table["ACK"]))
