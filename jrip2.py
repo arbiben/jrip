@@ -67,6 +67,7 @@ cost_json = json.dumps(cost_table)
 
 def listener_thread():
     while True:
+        print("listening")
         data, addr = sock.recvfrom(4096)
         jrip_file = json.loads(data)
         args = (addr, jrip_file)
@@ -97,13 +98,16 @@ def handle_ping(addr, jrip_file):
 
 
 def handle_ack(addr, jrip_file):
+    print("handeling ack ")
     hid = str(addr[0])+":"+str(addr[1])
     ack_num = jrip_file["ACK"] - 1
     if ack_num <= 100:
+        print("ack num is {}".format(ack_num))
         with lock:
             win_copy = copy.deepcopy(ack_window[hid])
         
         win_copy = win_copy[:-1]
+        print("copy of win is {}".format(win_copy))
 
         i = get_index_ack(ack_num, win_copy, 0, len(win_copy)-1)
         if i != -1 and win_copy[i][1] is False:
