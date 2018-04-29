@@ -9,8 +9,8 @@
 #################################
 
 
-import socket, time, json, random
-import threading, sys, re
+import socket, json, random
+import threading, sys, datetime 
 import argparse, json, copy
 from cost_table import cost_table
 from requests import get
@@ -54,7 +54,6 @@ def broadcast_table():
             neighbors = table.get_all_neighbors()[:]
             t = copy.deepcopy(table.get_table())
         event.wait(10)
-        print("pinging everyone!")
         for n in neighbors:
             ip, port = n.split(":")
             sock.sendto(json.dumps(t).encode(), (ip, int(port)))
@@ -68,7 +67,10 @@ def handle_jrip(neighbor_table, addr):
     
     # if changes were made - print the table and ping neighbors
     if change:
-        print_table()
+        for n in change:
+            now = datetime.datetime.now()
+            print("\n{} {}\n".format(now.strftime("%a %b %d %H:%M:%S UTC %Y"),n))
+        print_table() # maybe remove?
         event.set()
 
 # start an indipendent thread that broadcasts the table

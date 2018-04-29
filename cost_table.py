@@ -42,7 +42,7 @@ class cost_table:
 
     def update_table(self, other_table, from_ip):
         cost_list = other_table["Data"]["RIPTable"]
-        change = False
+        change = []
         if from_ip in self.nodes:
             for n in cost_list:
                 # neig is the info of the neighbor that sent the JRIP table
@@ -52,12 +52,11 @@ class cost_table:
                         # temp holds my info about the Node we recive info about
                         temp = self.table["Data"]["RIPTable"][self.nodes[n["Dest"]]]
                         if int(n["Cost"]) + int(neig["Cost"]) < int(int(temp["Cost"])):
-                            change = True
                             temp["Next"] = neig["Dest"]
                             temp["Cost"] = int(neig["Cost"]) + int(n["Cost"])
+                            change.append(neig["Dest"]+" "+temp["Cost"])
 
                     else:
-                        change = True
                         new_node = {}
                         new_node["Dest"] = n["Dest"]
                         new_node["Next"] = neig["Dest"]
@@ -66,6 +65,7 @@ class cost_table:
                         self.nodes[n["Dest"]] = self.location
                         self.location = self.location + 1
                         self.table["Data"]["RIPTable"].append(new_node)
+                        change.append(new_node["Dest"]+" "+str(new_node["Cost"]))
 
             return change
 
