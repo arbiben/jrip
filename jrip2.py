@@ -89,7 +89,7 @@ def handle_ping(addr, jrip_file):
         expecting = pinging_me[hid]
         if expecting <= seq_num:
             pinging_me[hid] = expecting + 1 if int(expecting) == int(seq_num) else expecting
-            cost_table["ACK"] = expecting
+            cost_table["ACK"] = pinging_me[hid]
             cost_table["SEQ"] = -1
             print("pingign back {}".format(cost_table["ACK"]))
             sock.sendto(json.dumps(cost_table).encode(), (addr[0], int(addr[1])))
