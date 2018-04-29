@@ -8,23 +8,32 @@
 #               COMS 4119                  #
 ############################################
 
+import copy
 
 class cost_table:
     def __init__(self, list_of_neighbors):
         # initialize the table
         self.table = {}
-        self.table["SEQ"] = -1  # not sure if neede?
+        self.nodes = {}
+        self.neighbors = []
+        self.location = 0
+
+        self.table["SEQ"] = 0  # not sure if neede?
+        self.table["ACK"] = 0
         self.table["Data"] = {}
         self.table["Data"]["Type"] = "JRIP"
         self.table["Data"]["RIPTable"] = []
-        self.neighbors = {}
+
 
         for n in list_of_neighbors:
             ip, port, cost = n.split(":")
             nid = ip+":"+port
 
             new_neighbor = {}
-            neighbors[nid] = cost
+            self.neighbors.append(nid)
+            self.nodes[nid] = self.location
+            self.location = self.location + 1
+
             new_neighbor["Dest"] = nid
             new_neighbor["Next"] = nid 
             new_neighbor["Cost"] = cost
@@ -32,26 +41,31 @@ class cost_table:
 
     def update_table(self, other_table, from_ip):
         cost_list = other_table["Data"]["RIPTable"]
-        my_list = self.table["Data"]["RIPTable"]
-        
-        for n in cost_list:
-            found = False
-            for m in my_list:
-                if m["Dest"] == n["Dest"]:
-                    if n["Cost"] < m["Cost"]+neighbors[from_ip]:
-                        m["Cost"] = neighbors[from_ip] + n["Cost"]
-                        m["Next"] = from_ip
-                    found = True
-                    break
-            if not Found:
-                new_dest = {}
-                new_dest["Dest"] = n["Dest"]
-                new_dest["Next"] = n["Next"]
-                new_dest["Cost"] = n["Cost"] + neighbors[from_ip]
-                my_list.append(new_dest)
 
-    def get_all_neigbors(self):
-        return neighbors
+        for n in cost_list:
+            # neig is the info of the neighbor that sent the JRIP table
+            neig = self.table["Data"]["RIPTable"][self.nodes[from_ip]]
+            
+            if n["Dest"] in self.nodes:
+                # temp holds my info about the Node we recive info about
+                temp = self.table["Data"]["RIPTable"][self.nodes[n["Dest"]]]
+                
+                if n["Cost"] < temp["Cost"] + neig["Cost"]:
+                    temp["Next"] = neigh["Dest"]
+                    temp["Cost"] = neigh["Cost"] + n["Cost"]
+
+            else:
+                new_node = {}
+                new_node["Dest"] = n["Dest"]
+                new_node["Next"] = neig["Dest"]
+                new_node["Cost"] = neig["Cost"] + n["Cost"]
+                
+                self.nodes[n["Dest"]] = self.location
+                self.location = self.location + 1
+                self.table["Data"]["JRIPTable"].append(new_node)
+            
+    def get_all_neighbors(self):
+        return self.neighbors
 
     def get_table(self):
         return self.table
