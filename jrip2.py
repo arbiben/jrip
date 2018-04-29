@@ -78,7 +78,7 @@ def listener_thread():
             t.start()
 
 def handle_ping(addr, jrip_file):
-    print("got a ping! from {}".format(addr))
+    print("{}".format(jrip_file))
     hid = str(addr[0])+":"+str(addr[1])
     seq_num = jrip_file["SEQ"]
     
