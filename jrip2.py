@@ -88,7 +88,7 @@ def handle_ping(addr, jrip_file):
         
         expecting = pinging_me[hid]
         if expecting <= seq_num:
-            pinging_me[hid] = expecting + 1 if expecting==seq_num else expecting
+            pinging_me[hid] = expecting + 1 if int(expecting) == int(seq_num) else expecting
             cost_table["ACK"] = expecting
             cost_table["SEQ"] = -1
             print("pingign back {}".format(cost_table["ACK"]))
