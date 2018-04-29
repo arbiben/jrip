@@ -130,9 +130,9 @@ def get_index_ack(target, arr, l, r):
         return mid
     
     if target > arr[mid][0]:
-        return get_index_ack(target,arr, l, mid-1)
+        return get_index_ack(target,arr, mid+1, r)
     
-    return get_index_ack(target, arr, mid+1, r)
+    return get_index_ack(target, arr, l, mid-1)
 
 def send_packets(hid):
     with lock:
