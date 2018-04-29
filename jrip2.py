@@ -65,22 +65,20 @@ for i in range(len(hosts)):
 
 cost_json = json.dumps(cost_table)
 
+# listens for incoming trafic and assigns to appropriate methods
 def listener_thread():
     while True:
-        print("listening")
         data, addr = sock.recvfrom(4096)
         jrip_file = json.loads(data)
         args = (addr, jrip_file)
-        print("ack:{} seq:{} from: {}".format(jrip_file["ACK"],jrip_file["SEQ"],  addr))
         if jrip_file["SEQ"] == -1:
-            print("going to handle the ack")
             t = threading.Thread(target=handle_ack, args=args)
             t.start()
         else:
-            print("going to handle the ping")
             t = threading.Thread(target=handle_ping, args=args)
             t.start()
 
+# handles packets that are pinging this server
 def handle_ping(addr, jrip_file):
     hid = str(addr[0])+":"+str(addr[1])
     seq_num = jrip_file["SEQ"]
@@ -97,30 +95,26 @@ def handle_ping(addr, jrip_file):
             sock.sendto(json.dumps(cost_table).encode(), (addr[0], int(addr[1])))
 
 
+# sending next packet based on ack received
 def handle_ack(addr, jrip_file):
-    print("handeling ack ")
     hid = str(addr[0])+":"+str(addr[1])
     ack_num = jrip_file["ACK"] - 1
     if ack_num <= 100:
-        print("ack num is {}".format(ack_num))
         with lock:
             win_copy = copy.deepcopy(ack_window[hid])
         
         win_copy = win_copy[:-1]
 
         i = get_index_ack(ack_num, win_copy, 0, len(win_copy)-1)
-        print("i is {} and table is {}".format(i, win_copy))
         if i != -1 and win_copy[i][1] is False:
-            print("i is {}".format(i))
             win_copy[i] = [win_copy[i][0],True]
             win_copy.append(i)
-            print("made changes")
             with lock:
                 ack_window[hid] = copy.deepcopy(win_copy)
-                print("original table is {}".format(ack_window[hid]))
 
             events[hid].set()
 
+# binary search on window for arriving packet
 def get_index_ack(target, arr, l, r):
     if l>r:
         return -1
@@ -134,6 +128,7 @@ def get_index_ack(target, arr, l, r):
     
     return get_index_ack(target, arr, l, mid-1)
 
+# send packet to assigned host
 def send_packets(hid):
     with lock:
         win_copy = copy.deepcopy(ack_window[hid])
@@ -144,7 +139,6 @@ def send_packets(hid):
     if len(win_copy) >= 1:
         ip, port = hid.split(":")
         change = 0 if last == -1 else last
-        #print("sending packets {}-{} to {}".format(change, change+4, hid))
         for i in range(change, len(win_copy)):
             if random.randint(0,100) >= loss_rate:
                 dic["SEQ"] = win_copy[i][0]
@@ -155,6 +149,7 @@ def send_packets(hid):
             with lock:
                 ack_window[hid+"T"] = ack_window[hid+"T"] + 1
 
+# move window based on ack that has arrived
 def slide_window(hid):
     with lock:
         win_copy = copy.deepcopy(ack_window[hid])
@@ -174,7 +169,7 @@ def slide_window(hid):
     with lock:
         ack_window[hid] = copy.deepcopy(win_copy)
 
-
+# make sure all packets are sent and ACK'ed and then die
 def neighbor_thread(a, hid):
     while True:
         with lock:
