@@ -78,6 +78,8 @@ def listener_thread():
             t.start()
 
 def handle_ping(addr, jrip_file):
+    print("got a ping! from {}".format(addr))
+    print(jrip_file)
     hid = str(addr[0])+":"+str(addr[1])
     seq_num = jrip_file["SEQ"]
     
@@ -106,7 +108,6 @@ def handle_ack(addr, jrip_file):
         if i != -1 and win_copy[i][1] is False:
             win_copy[i] = [win_copy[i][0],True]
             win_copy.append(i)
-            #print("changes have been made {}".format(win_copy))
             with lock:
                 ack_window[hid] = copy.deepcopy(win_copy)
 
