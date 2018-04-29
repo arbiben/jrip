@@ -100,7 +100,7 @@ def handle_ack(addr, jrip_file):
     print(jrip_file)
     hid = str(addr[0])+":"+str(addr[1])
     ack_num = jrip_file["ACK"] - 1
-    if ack_num < 100:
+    if ack_num < 101:
         with lock:
             win_copy = copy.deepcopy(ack_window[hid])
         
