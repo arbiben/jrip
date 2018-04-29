@@ -13,6 +13,7 @@ import socket, time, json, random
 import threading, sys, re
 import argparse, json, copy
 from cost_table import cost_table
+from requests import get
 
 # flags for user input
 parser = argparse.ArgumentParser()
@@ -32,7 +33,8 @@ sock = socket.socket(socket.AF_INET, # Internet
 
 sock.bind(('', args.port))
 hosts = args.hosts
-table = cost_table(hosts)
+my_ip = get('https://api.ipify.org').text
+table = cost_table(hosts, str(my_ip+":"+str(args.port)))
 event = threading.Event()
 lock = threading.Lock()
 
@@ -40,7 +42,7 @@ def print_table():
     with lock:
         rip = table.get_table()["Data"]["RIPTable"][:]
     
-    print("\nDestination\t\tDistance\tNext_Hop")
+    print("\nDestination\t\tDistance\t\tNext_Hop")
     for n in rip:
         print("{}\t{}\t{}".format(n["Dest"],n["Cost"], n["Next"]))
     
@@ -51,7 +53,7 @@ def broadcast_table():
         with lock:
             neighbors = table.get_all_neighbors()[:]
             t = copy.deepcopy(table.get_table())
-        event.wait(5)
+        event.wait(10)
         for n in neighbors:
             ip, port = n.split(":")
             sock.sendto(json.dumps(t).encode(), (ip, int(port)))
@@ -61,7 +63,7 @@ def broadcast_table():
 # send the new JRIP to cost_table, and the broadcast
 def handle_jrip(neighbor_table, addr):
     with lock:
-        table.update_table(neighbor_table, addr[0]+":"+addr[1])
+        table.update_table(neighbor_table, addr[0]+":"+str(addr[1]))
 
     event.set()
 
@@ -73,6 +75,6 @@ t.start()
 while True:
     data, addr = sock.recvfrom(4096)
     jrip_file = json.loads(data)
-    if jrip_file["Type"] == "JRIP":
+    if jrip_file["Data"]["Type"] == "JRIP":
         handle_jrip(jrip_file, addr)
 

@@ -11,12 +11,13 @@
 import copy
 
 class cost_table:
-    def __init__(self, list_of_neighbors):
+    def __init__(self, list_of_neighbors, my_ip):
         # initialize the table
         self.table = {}
         self.nodes = {}
         self.neighbors = []
         self.location = 0
+        self.me = my_ip
 
         self.table["SEQ"] = 0  # not sure if neede?
         self.table["ACK"] = 0
@@ -45,24 +46,24 @@ class cost_table:
         for n in cost_list:
             # neig is the info of the neighbor that sent the JRIP table
             neig = self.table["Data"]["RIPTable"][self.nodes[from_ip]]
-            
-            if n["Dest"] in self.nodes:
-                # temp holds my info about the Node we recive info about
-                temp = self.table["Data"]["RIPTable"][self.nodes[n["Dest"]]]
-                
-                if n["Cost"] < temp["Cost"] + neig["Cost"]:
-                    temp["Next"] = neigh["Dest"]
-                    temp["Cost"] = neigh["Cost"] + n["Cost"]
+            if n["Dest"] != self.me: 
+                if n["Dest"] in self.nodes:
+                    # temp holds my info about the Node we recive info about
+                    temp = self.table["Data"]["RIPTable"][self.nodes[n["Dest"]]]
+                    
+                    if int(n["Cost"]) < int(temp["Cost"]) + int(neig["Cost"]):
+                        temp["Next"] = neig["Dest"]
+                        temp["Cost"] = int(neig["Cost"]) + int(n["Cost"])
 
-            else:
-                new_node = {}
-                new_node["Dest"] = n["Dest"]
-                new_node["Next"] = neig["Dest"]
-                new_node["Cost"] = neig["Cost"] + n["Cost"]
-                
-                self.nodes[n["Dest"]] = self.location
-                self.location = self.location + 1
-                self.table["Data"]["JRIPTable"].append(new_node)
+                else:
+                    new_node = {}
+                    new_node["Dest"] = n["Dest"]
+                    new_node["Next"] = neig["Dest"]
+                    new_node["Cost"] = int(neig["Cost"]) + int(n["Cost"])
+                    
+                    self.nodes[n["Dest"]] = self.location
+                    self.location = self.location + 1
+                    self.table["Data"]["RIPTable"].append(new_node)
             
     def get_all_neighbors(self):
         return self.neighbors
