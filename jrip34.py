@@ -44,7 +44,7 @@ def print_table():
     
     print("\nDestination\t\tDistance\t\tNext_Hop")
     for n in rip:
-        print("{}\t{}\t{}".format(n["Dest"],n["Cost"], n["Next"]))
+        print("{}\t{}\t\t{}".format(n["Dest"],n["Cost"], n["Next"]))
     
 
 # send the updated table to every neighbot
@@ -58,12 +58,15 @@ def broadcast_table():
             ip, port = n.split(":")
             sock.sendto(json.dumps(t).encode(), (ip, int(port)))
         event.clear()
-        print_table()
 
 # send the new JRIP to cost_table, and the broadcast
 def handle_jrip(neighbor_table, addr):
+    change = False
     with lock:
-        table.update_table(neighbor_table, addr[0]+":"+str(addr[1]))
+        change = table.update_table(neighbor_table, addr[0]+":"+str(addr[1]))
+    
+    if change:
+        print_table()
 
     event.set()
 
@@ -71,7 +74,9 @@ def handle_jrip(neighbor_table, addr):
 t = threading.Thread(target=broadcast_table)
 t.start()
 
-# listen for input
+print_table()
+
+#listen for input
 while True:
     data, addr = sock.recvfrom(4096)
     jrip_file = json.loads(data)
