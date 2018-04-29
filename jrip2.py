@@ -96,6 +96,7 @@ def handle_ping(addr, jrip_file):
 
 
 def handle_ack(addr, jrip_file):
+    print(jrip_file)
     hid = str(addr[0])+":"+str(addr[1])
     ack_num = jrip_file["ACK"] - 1
     if ack_num < 100:
