@@ -67,6 +67,7 @@ cost_json = json.dumps(cost_table)
 
 def listener_thread():
     while True:
+        print("alive")
         data, addr = sock.recvfrom(4096)
         jrip_file = json.loads(data)
         args = (addr, jrip_file)
@@ -170,7 +171,6 @@ def slide_window(hid):
 def neighbor_thread(a, hid):
     while True:
         with lock:
-            print("length of {} window is {}".format(hid, ack_window[hid]))
             if len(ack_window[hid]) <= 1:
                 drop = ack_window[hid+"D"]
                 total = ack_window[hid+"T"]
