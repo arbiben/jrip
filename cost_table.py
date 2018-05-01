@@ -71,7 +71,7 @@ class cost_table:
             return change
 
     def get_next_hop(self, destination):
-        if destination in nodes:
+        if destination in self.nodes:
             next_hop = self.table["Data"]["RIPTable"][self.nodes[destination]]["Next"]
             return next_hop.split(":")
         

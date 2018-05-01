@@ -64,7 +64,6 @@ def broadcast_table():
 
 # send the new JRIP to cost_table, and the broadcast
 def handle_jrip(neighbor_table, addr):
-    change = False
     with lock:
         change = table.update_table(neighbor_table, addr[0]+":"+str(addr[1]))
     
@@ -76,25 +75,32 @@ def handle_jrip(neighbor_table, addr):
         print_table() # maybe remove?
         event.set()
 
-def handle_trace(jrip_file, addr):
-    if not jrip_file["Data"]["TRACE"]:
+def handle_trace(trace_file, addr):
+    global tr_ip
+    global tr_port
+    if not trace_file["Data"]["TRACE"]:
+        print("i remember who sent it to me now")
         tr_ip = addr[0]
         tr_port = int(addr[1])
 
-    if jrip_file["Data"]["TRACE"] and jrip_file["Data"]["TRACE"][0]== my_address:
-        sock.sendto(json.dumps(jrip_file).encode(), (tr_ip, tr_port))
+    if trace_file["Data"]["TRACE"] and trace_file["Data"]["TRACE"][0] == my_address:
+        print("were are done here, I will send it back to the sender")
+        sock.sendto(json.dumps(trace_file).encode(), (tr_ip, tr_port))
         
     else:
+        print("i am just one of the steps ;/")
         # append my_ip to the trace list
-        jrip_file["Data"]["TRACE"].append(my_address)
+        trace_file["Data"]["TRACE"].append(my_address)
 
-        if jrip_file["Data"]["Destination"] != my_address:
-            ip, port = table.get_next_hop(jrip_file["Data"]["Destination"])
+        if trace_file["Data"]["Destination"] != my_address:
+            print("forwarding")
+            ip, port = table.get_next_hop(trace_file["Data"]["Destination"])
         
-        elif jrip_file["Data"]["Destination"] == my_address:   
-            ip, port = jrip_file["Data"]["Origin"].split(":")
+        elif trace_file["Data"]["Destination"] == my_address:
+            print("i am last! sending it back to origin")
+            ip, port = trace_file["Data"]["Origin"].split(":")
 
-        socket.sendto(json.dumps().encode(), (ip, str(port)))
+        sock.sendto(json.dumps(trace_file).encode(), (ip, int(port)))
         
 
 # start an indipendent thread that broadcasts the table
