@@ -82,7 +82,7 @@ def listener_thread():
 def handle_ping(addr, jrip_file):
     hid = str(addr[0])+":"+str(addr[1])
     seq_num = jrip_file["SEQ"]
-    
+
     with lock:
         if hid not in pinging_me:
             pinging_me[hid] = 0
@@ -93,6 +93,8 @@ def handle_ping(addr, jrip_file):
             cost_table["ACK"] = pinging_me[hid]
             cost_table["SEQ"] = -1
             sock.sendto(json.dumps(cost_table).encode(), (addr[0], int(addr[1])))
+            if pinging_me[hid] >= 100:
+                pinging_me[hid] = 0
 
 
 # sending next packet based on ack received

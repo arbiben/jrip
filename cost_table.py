@@ -8,15 +8,15 @@
 #               COMS 4119                  #
 ############################################
 
-import copy
+import copy, json
 
 class cost_table:
     def __init__(self, list_of_neighbors, my_ip):
         # initialize the table
-        self.table = {}
-        self.nodes = {}
-        self.neighbors = []
-        self.location = 0
+        self.table = {}     # dict of the table itself
+        self.nodes = {}     # dict of all nodes and locations
+        self.neighbors = [] # list of all neighbors
+        self.location = 0   # 
         self.me = my_ip
 
         self.table["SEQ"] = 0  # not sure if neede?
@@ -40,6 +40,7 @@ class cost_table:
             new_neighbor["Cost"] = cost
             self.table["Data"]["RIPTable"].append(copy.deepcopy(new_neighbor))
 
+    # updates the tables with nodes and costs
     def update_table(self, other_table, from_ip):
         cost_list = other_table["Data"]["RIPTable"]
         change = []
@@ -69,6 +70,14 @@ class cost_table:
 
             return change
 
+    def get_next_hop(self, destination):
+        if destination in nodes:
+            next_hop = self.table["Data"]["RIPTable"][self.nodes[destination]]["Next"]
+            return next_hop.split(":")
+        
+        else:
+            return None
+    
     def get_all_neighbors(self):
         return self.neighbors
 

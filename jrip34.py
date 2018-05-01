@@ -27,16 +27,19 @@ if args.port is None:
     print("enter port info")
     sys.exit()
 
-
 sock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
 
 sock.bind(('', args.port))
+
 hosts = args.hosts
 my_ip = get('https://api.ipify.org').text
-table = cost_table(hosts, str(my_ip+":"+str(args.port)))
+my_address = str(my_ip+":"+str(args.port))
+table = cost_table(hosts, my_address)
 event = threading.Event()
 lock = threading.Lock()
+tr_ip = ''
+tr_port = 0
 
 def print_table():
     with lock:
@@ -73,6 +76,27 @@ def handle_jrip(neighbor_table, addr):
         print_table() # maybe remove?
         event.set()
 
+def handle_trace(jrip_file, addr):
+    if not jrip_file["Data"]["TRACE"]:
+        tr_ip = addr[0]
+        tr_port = int(addr[1])
+
+    if jrip_file["Data"]["TRACE"] and jrip_file["Data"]["TRACE"][0]== my_address:
+        sock.sendto(json.dumps(jrip_file).encode(), (tr_ip, tr_port))
+        
+    else:
+        # append my_ip to the trace list
+        jrip_file["Data"]["TRACE"].append(my_address)
+
+        if jrip_file["Data"]["Destination"] != my_address:
+            ip, addr = table.get_next_hop(jrip_file["Data"]["Destination"])
+        
+        elif jrip_file["Data"]["Destination"] == my_address:   
+            ip, addr = jrip_file["Data"]["Origin"].split(":")
+
+        socket.sendto(json.dumps().encode(), (ip, str(port)))
+        
+
 # start an indipendent thread that broadcasts the table
 t = threading.Thread(target=broadcast_table)
 t.start()
@@ -85,4 +109,7 @@ while True:
     jrip_file = json.loads(data)
     if jrip_file["Data"]["Type"] == "JRIP":
         handle_jrip(jrip_file, addr)
+    
+    if jrip_file["Data"]["Type"] == "TRACE":
+        handle_trace(jrip_file, addr)
 
