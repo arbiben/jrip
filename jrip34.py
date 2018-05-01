@@ -89,10 +89,10 @@ def handle_trace(jrip_file, addr):
         jrip_file["Data"]["TRACE"].append(my_address)
 
         if jrip_file["Data"]["Destination"] != my_address:
-            ip, addr = table.get_next_hop(jrip_file["Data"]["Destination"])
+            ip, port = table.get_next_hop(jrip_file["Data"]["Destination"])
         
         elif jrip_file["Data"]["Destination"] == my_address:   
-            ip, addr = jrip_file["Data"]["Origin"].split(":")
+            ip, port = jrip_file["Data"]["Origin"].split(":")
 
         socket.sendto(json.dumps().encode(), (ip, str(port)))
         
