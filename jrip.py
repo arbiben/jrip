@@ -1,34 +1,67 @@
 #!/usr/bin/env python
 
-import socket 
-import time
-import random
+#################################
+#          Ben Arbib            #
+#             P2                #
+#            JRIP               #
+#                               #
+#          COMS 4119            #
+#################################
+
+
+import socket
 import json
+import random
+import threading
+import sys
+import datetime
+import argparse
+import json
+import copy
+from cost_table import cost_table
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
-MESSAGE = "hello sir"
-drop = input("enter drop rate out of 100: ")
+# flags for user input
+parser = argparse.ArgumentParser()
+parser.add_argument("-p", dest='port', type=int, help="port number")
+parser.add_argument("-l", dest='loss_rate', type=float, help="loss rate")
+parser.add_argument("hosts", nargs='+', help="HOSTS array")
 
-sock = socket.socket(socket.AF_INET, # Internet
-                             socket.SOCK_DGRAM) # UDP
-data = ''
-with open('mytable.json') as jrip:
-    data = json.load(jrip)
-#my_addr = sock.getsockname()
+args = parser.parse_args()
 
-dropped = 0
-send_amount = 5
-for i in range(send_amount):
-    n = random.randint(0,100)
-    if int(drop) > int(n):
-        print("Packet dropped")
-        dropped = dropped + 1
-    else:
-        sock.sendto(bytes(json.dumps(data), 'utf-8'), (UDP_IP, UDP_PORT))
-        print(sock.recvfrom(1024)[0])
-    time.sleep(0.2)
+# handle input errors
+if args.port is None or args.loss_rate is None:
+    print("enter port info")
+    sys.exit()
 
-print("{} paackets dropped out of {}  pings".format(dropped, send_amount))
 
-sock.close()
+if args.loss_rate > 1 or args.loss_rate < 0:
+    print("loss rate 0<l<1")
+    sys.exit()
+
+loss_rate = int(args.loss_rate * 100)
+sock = socket.socket(socket.AF_INET,  # Internet
+                     socket.SOCK_DGRAM)  # UDP
+
+sock.bind(('', args.port))
+
+hosts = args.hosts
+my_address = socket.gethostbyname(socket.gethostname())
+event = threading.Event()
+lock = threading.Lock()
+
+def handle_host(d,hid):
+    ip, port, _ = hid.split(":")
+    print(my_address)
+    for _ in range (100):
+        sock.sendto(my_address.encode(), (ip, int(port)))
+
+for host in args.hosts:
+    args = (0,host)
+    t = threading.Thread(target=handle_host, args=args)
+    t.start()
+
+#listen for input
+while True:
+    print("listening")
+    data, addr = sock.recvfrom(4096)
+    print(data)
