@@ -13,7 +13,6 @@ import socket, json, random
 import threading, sys, datetime 
 import argparse, json, copy
 from cost_table import cost_table
-from requests import get
 
 # flags for user input
 parser = argparse.ArgumentParser()
@@ -33,8 +32,7 @@ sock = socket.socket(socket.AF_INET, # Internet
 sock.bind(('', args.port))
 
 hosts = args.hosts
-my_ip = get('https://api.ipify.org').text
-my_address = str(my_ip+":"+str(args.port))
+my_address = socket.gethostbyname(socket.gethostname())+":"+str(args.port) 
 table = cost_table(hosts, my_address)
 event = threading.Event()
 lock = threading.Lock()
@@ -79,25 +77,18 @@ def handle_trace(trace_file, addr):
     global tr_ip
     global tr_port
     if not trace_file["Data"]["TRACE"]:
-        print("i remember who sent it to me now")
         tr_ip = addr[0]
         tr_port = int(addr[1])
 
     if trace_file["Data"]["TRACE"] and trace_file["Data"]["TRACE"][0] == my_address:
-        print("were are done here, I will send it back to the sender")
         sock.sendto(json.dumps(trace_file).encode(), (tr_ip, tr_port))
         
     else:
-        print("i am just one of the steps ;/")
         # append my_ip to the trace list
         trace_file["Data"]["TRACE"].append(my_address)
-
         if trace_file["Data"]["Destination"] != my_address:
-            print("forwarding")
             ip, port = table.get_next_hop(trace_file["Data"]["Destination"])
-        
         elif trace_file["Data"]["Destination"] == my_address:
-            print("i am last! sending it back to origin")
             ip, port = trace_file["Data"]["Origin"].split(":")
 
         sock.sendto(json.dumps(trace_file).encode(), (ip, int(port)))
@@ -112,10 +103,9 @@ print_table()
 #listen for input
 while True:
     data, addr = sock.recvfrom(4096)
-    jrip_file = json.loads(data)
+    jrip_file = json.loads(data.decode())
     if jrip_file["Data"]["Type"] == "JRIP":
         handle_jrip(jrip_file, addr)
-    
     if jrip_file["Data"]["Type"] == "TRACE":
         handle_trace(jrip_file, addr)
 

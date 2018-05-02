@@ -69,7 +69,7 @@ cost_json = json.dumps(cost_table)
 def listener_thread():
     while True:
         data, addr = sock.recvfrom(4096)
-        jrip_file = json.loads(data)
+        jrip_file = json.loads(data.decode())
         args = (addr, jrip_file)
         if jrip_file["SEQ"] == -1:
             t = threading.Thread(target=handle_ack, args=args)

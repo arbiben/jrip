@@ -37,8 +37,8 @@ table = {}
 data = {}
 
 data["Type"] = "TRACE"
-data["Destination"] = hosts[0]
-data["Origin"] = hosts[1]
+data["Destination"] = hosts[1]
+data["Origin"] = hosts[0]
 data["TRACE"] = []
 
 table["uni"] = "ba2490"
