@@ -52,7 +52,7 @@ cost_table["Data"]["Type"] = "JRIP"
 cost_table["Data"]["RIPTable"] = []
 
 for i in range(len(hosts)):
-    h, p = hosts[i].split(":")
+    h, p, _ = hosts[i].split(":")
     temp = {}
 
     check = re.search('[a-zA-Z]', h)
@@ -194,7 +194,6 @@ def neighbor_thread(a, hid):
 # call listenning thread
 t = threading.Thread(target=listener_thread)
 t.start()
-
 
 # create a thread for every host given in command line
 for k in cost_table["Data"]["RIPTable"]:

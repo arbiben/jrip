@@ -16,6 +16,7 @@ class cost_table:
         self.table = {}     # dict of the table itself
         self.nodes = {}     # dict of all nodes and locations
         self.neighbors = [] # list of all neighbors
+        self.original_cost = {}
         self.location = 0   # 
         self.me = my_ip
 
@@ -39,6 +40,7 @@ class cost_table:
             new_neighbor["Next"] = nid 
             new_neighbor["Cost"] = cost
             self.table["Data"]["RIPTable"].append(copy.deepcopy(new_neighbor))
+            self.original_cost[nid] = new_neighbor["Cost"]
 
     # updates the tables with nodes and costs
     def update_table(self, other_table, from_ip):
@@ -52,10 +54,10 @@ class cost_table:
                     if n["Dest"] in self.nodes:
                         # temp holds my info about the Node we recive info about
                         temp = self.table["Data"]["RIPTable"][self.nodes[n["Dest"]]]
-                        if int(n["Cost"]) + int(neig["Cost"]) < int(int(temp["Cost"])):
-                            temp["Next"] = neig["Dest"]
+                        if int(n["Cost"]) + int(self.original_cost[from_ip]) < int(temp["Cost"]):
+                            temp["Next"] = from_ip
                             temp["Cost"] = int(neig["Cost"]) + int(n["Cost"])
-                            change.append(neig["Dest"]+" "+temp["Cost"])
+                            change.append(neig["Dest"]+" "+str(temp["Cost"]))
 
                     else:
                         new_node = {}

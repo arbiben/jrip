@@ -1,0 +1,19 @@
+Ben Arbib - project 2 report (ba2490)
+
+I've been using python 3.6 for this project
+
+part 1
+This part has been modified since the first submission
+It receives - port num, loss rate, and hosts as arguments
+sends 100 packets to each host and some will drop based on the loss rate
+
+part 2
+GBN - same inputs as part1
+also sends 100 packets, but it makes sure that all 100 packets arrive at the destination
+I used the sliding window that moved based on the last packet received.
+In addition, I manage incomming packets and send ACK's only when all previous packets arrived
+after all transactions, stdout will present the drop rate based on calculation
+
+part 3,4
+hold a table with all nodes and broadcast the table to neighbors every 10 seconds
+if new info arrives, update table and broadcast again
