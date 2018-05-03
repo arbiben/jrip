@@ -81,12 +81,12 @@ def handle_trace(trace_file, addr):
     ack_num = trace_file["SEQ"]
     sock.sendto(json.dumps(table.get_ack_pack(ack_num)).encode(), (addr[0], int(addr[1])))
     
-    # append my_ip to the trace list
-    trace_file["Data"]["TRACE"].append(my_address)
-    
     if not trace_file["Data"]["TRACE"]:
         tr_ip = addr[0]
         tr_port = int(addr[1])
+    
+    # append my_ip to the trace list
+    trace_file["Data"]["TRACE"].append(my_address)
 
     if trace_file["Data"]["TRACE"] and trace_file["Data"]["TRACE"][0] == my_address:
         sock.sendto(json.dumps(trace_file).encode(), (tr_ip, tr_port))
