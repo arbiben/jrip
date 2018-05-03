@@ -108,8 +108,8 @@ print_table()
 while True:
     data, addr = sock.recvfrom(4096)
     jrip_file = json.loads(data)
-    if jrip_file["Data"]["Type"] == "JRIP":
-        handle_jrip(jrip_file, addr)
-    if jrip_file["Data"]["Type"] == "TRACE":
-        handle_trace(jrip_file, addr)
-
+    if "Type" in jrip_file["Data"]:
+        if jrip_file["Data"]["Type"] == "JRIP":
+            handle_jrip(jrip_file, addr)
+        if jrip_file["Data"]["Type"] == "TRACE":
+            handle_trace(jrip_file, addr)
