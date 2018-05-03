@@ -42,7 +42,7 @@ data["Origin"] = hosts[0]
 data["TRACE"] = []
 
 table["uni"] = "ba2490"
-table["SEQ"] = 1
+table["SEQ"] = 0
 table["ACK"] = 0
 table["Data"] = data
 
@@ -61,7 +61,8 @@ while True:
     addr_id = addr[0]+":"+str(addr[1])
     if addr_id == hosts[0]:
         jrip_file = json.loads(data)
-        if jrip_file["Data"]["Type"] == "TRACE":
-            print_trace(jrip_file)
-            sock.close()
-            sys.exit()
+        if jrip_file["Data"]:
+            if jrip_file["Data"]["Type"] == "TRACE":
+                print_trace(jrip_file)
+                sock.close()
+                sys.exit()
