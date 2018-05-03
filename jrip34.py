@@ -85,10 +85,9 @@ def handle_trace(trace_file, addr):
         tr_ip = addr[0]
         tr_port = int(addr[1])
     
-    # append my_ip to the trace list
-    trace_file["Data"]["TRACE"].append(my_address)
 
-    if trace_file["Data"]["TRACE"] and trace_file["Data"]["TRACE"][0] == my_address:
+    if trace_file["Data"]["TRACE"] and trace_file["Data"]["TRACE"][0] == my_public_address:
+        trace_file["Data"]["TRACE"].append(my_public_address)
         sock.sendto(json.dumps(trace_file).encode(), (tr_ip, tr_port))
         
     else:
