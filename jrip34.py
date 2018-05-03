@@ -13,6 +13,7 @@ import socket, json, random
 import threading, sys, datetime 
 import argparse, json, copy
 from cost_table import cost_table
+from requests import get
 
 # flags for user input
 parser = argparse.ArgumentParser()
@@ -32,8 +33,9 @@ sock = socket.socket(socket.AF_INET, # Internet
 sock.bind(('', args.port))
 
 hosts = args.hosts
-my_address = socket.gethostbyname(socket.gethostname())+":"+str(args.port) 
-table = cost_table(hosts, my_address)
+my_address = socket.gethostbyname(socket.gethostname())+":"+str(args.port)
+my_public_address = get('https://api.ipify.org').text+":"+str(args.port)
+table = cost_table(hosts, my_address, my_public_address)
 event = threading.Event()
 lock = threading.Lock()
 tr_ip = ''

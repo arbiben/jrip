@@ -11,14 +11,15 @@
 import copy, json
 
 class cost_table:
-    def __init__(self, list_of_neighbors, my_ip):
+    def __init__(self, list_of_neighbors, my_ip, my_pub_ip):
         # initialize the table
         self.table = {}     # dict of the table itself
         self.nodes = {}     # dict of all nodes and locations
         self.neighbors = [] # list of all neighbors
         self.original_cost = {}
         self.location = 0   # 
-        self.me = my_ip
+        self.me_local = my_ip
+        self.me_public = my_pub_ip
 
         self.table["SEQ"] = 0  # not sure if neede?
         self.table["ACK"] = 0
@@ -50,7 +51,7 @@ class cost_table:
             for n in cost_list:
                 # neig is the info of the neighbor that sent the JRIP table
                 neig = self.table["Data"]["RIPTable"][self.nodes[from_ip]]
-                if n["Dest"] != self.me:
+                if n["Dest"] != self.me_local and n["Dest"] != self.me_public:
                     if n["Dest"] in self.nodes:
                         # temp holds my info about the Node we recive info about
                         temp = self.table["Data"]["RIPTable"][self.nodes[n["Dest"]]]
