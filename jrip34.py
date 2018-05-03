@@ -89,7 +89,7 @@ def handle_trace(trace_file, addr):
         
     else:
         # append my_ip to the trace list
-        trace_file["Data"]["TRACE"].append(my_address)
+        trace_file["Data"]["TRACE"].append(my_public_address)
         if trace_file["Data"]["Destination"] != my_address:
             ip, port = table.get_next_hop(trace_file["Data"]["Destination"])
         elif trace_file["Data"]["Destination"] == my_address:
