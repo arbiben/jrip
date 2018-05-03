@@ -80,6 +80,10 @@ def handle_trace(trace_file, addr):
     global tr_port
     ack_num = trace_file["SEQ"]
     sock.sendto(json.dumps(table.get_ack_pack(ack_num)).encode(), (addr[0], int(addr[1])))
+    
+    # append my_ip to the trace list
+    trace_file["Data"]["TRACE"].append(my_address)
+    
     if not trace_file["Data"]["TRACE"]:
         tr_ip = addr[0]
         tr_port = int(addr[1])
@@ -88,8 +92,6 @@ def handle_trace(trace_file, addr):
         sock.sendto(json.dumps(trace_file).encode(), (tr_ip, tr_port))
         
     else:
-        # append my_ip to the trace list
-        trace_file["Data"]["TRACE"].append(my_address)
         if trace_file["Data"]["Destination"] != my_address:
             ip, port = table.get_next_hop(trace_file["Data"]["Destination"])
         elif trace_file["Data"]["Destination"] == my_address:
