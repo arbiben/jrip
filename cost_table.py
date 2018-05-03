@@ -17,7 +17,12 @@ class cost_table:
         self.nodes = {}     # dict of all nodes and locations
         self.neighbors = [] # list of all neighbors
         self.original_cost = {}
-        self.location = 0   # 
+        self.location = 0    
+        self.ack_pack = {}
+        self.ack_pack["SEQ"] = 0
+        self.ack_pack["ACK"] = 1
+        self.ack_pack["Data"] = {}
+        
         self.me_local = my_ip
         self.me_public = my_pub_ip
 
@@ -81,6 +86,10 @@ class cost_table:
         else:
             return None
     
+    def get_ack_pack(self, next_ack):
+        self.ack_pack["ACK"] = next_ack
+        return self.ack_pack
+
     def get_all_neighbors(self):
         return self.neighbors
 

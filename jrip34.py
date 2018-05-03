@@ -72,12 +72,14 @@ def handle_jrip(neighbor_table, addr):
         for n in change:
             now = datetime.datetime.now()
             print("\n{} {}\n".format(now.strftime("%a %b %d %H:%M:%S UTC %Y"),n))
-        print_table() # maybe remove?
+        print_table()
         event.set()
 
 def handle_trace(trace_file, addr):
     global tr_ip
     global tr_port
+    ack_num = trace_file["SEQ"]
+    sock.sendto(json.dumps(table.get_ack_pack(ack_num)).encode(), (addr[0], int(addr[1])))
     if not trace_file["Data"]["TRACE"]:
         tr_ip = addr[0]
         tr_port = int(addr[1])
@@ -105,7 +107,7 @@ print_table()
 #listen for input
 while True:
     data, addr = sock.recvfrom(4096)
-    jrip_file = json.loads(data.decode())
+    jrip_file = json.loads(data)
     if jrip_file["Data"]["Type"] == "JRIP":
         handle_jrip(jrip_file, addr)
     if jrip_file["Data"]["Type"] == "TRACE":
