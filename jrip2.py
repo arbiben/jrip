@@ -178,8 +178,9 @@ def neighbor_thread(a, hid):
             if len(ack_window[hid]) <= 1:
                 drop = ack_window[hid+"D"]
                 total = ack_window[hid+"T"]
-                rate = int(((total-drop)/total)*100)
-                print("Goodput Rate at {} {}/100".format(hid, rate))
+                totalDrop = int(total-drop)
+                ans = int(100*float(totalDrop)/float(total))
+                print("Goodput Rate at {} {}/100".format(hid, ans))
                 exit()
 
         
